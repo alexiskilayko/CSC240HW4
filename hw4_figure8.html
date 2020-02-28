@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Transformation Matrices</title>
+
+<script>
+    // Worked with Libby Leung.
+
+    var canvas;    // DOM object corresponding to the canvas
+    var graphics;  // 2D graphics context for drawing on the canvas
+    var timer;     // this is what lets us animate
+    var angle = (2*Math.PI)/60; // our angle
+    var track = 0; // this will help us keep track of the # of transformations we do
+
+    // this GLOBAL variable is responsible for maintaining the current
+    // set of transformations (3x3)
+    var currMatrix;
+
+    // this function multiplies the current matrix by another transformation,
+    // then updates the current matrix to the result
+    function pushMatrix(newMatrix) {
+        currMatrix = matrixMultiply(currMatrix, newMatrix); // order very important!
+
+        // note that the setTransform method clear the current matrix and then
+        // sets it to be this new one (it does not build up the transformations!)
+        graphics.setTransform(currMatrix[0][0],currMatrix[1][0],
+                           currMatrix[0][1],currMatrix[1][1],
+                           currMatrix[0][2],currMatrix[1][2]);
+    }
+
+    // returns the identity matrix
+    function identityMatrix() {
+        return [[1,0,0],
+                [0,1,0],
+                [0,0,1]];
+    }
+
+    // multiplies two matrices
+    function matrixMultiply(M1, M2) {
+        var matrix = [];
+        for (i=0; i < M1.length; i++) { // loop over rows of M1
+          var row = [];
+          for (j=0; j < M2[0].length; j++) { // loop over columns of M2
+            var sum = 0;
+            for (k=0; k < M2.length; k++) { // loop over items
+              sum = sum + (M1[i][k])*(M2[k][j]); // take the product
+            }
+            row.push(sum); // add to a row
+          }
+          matrix.push(row); // add a row to matrix
+        }
+        return matrix;
+    }
+
+    // scale a matrix by x- and y- scale values
+    function scaleMatrix(ax, ay) {
+        return [[ax, 0, 0],
+                [0, ay, 0],
+                [0, 0, 1]];
+    }
+
+    // rotate a matrix by an angle
+    function rotateMatrix(theta) {
+        return [[Math.cos(theta), -Math.sin(theta), 0],
+                [Math.sin(theta), Math.cos(theta), 0],
+                [0, 0, 1]];
+    }
+
+    // translate a matrix by x- and -y translation values
+    function translateMatrix(tx, ty) {
+        return [[1, 0, tx],
+                [0, 1, ty],
+                [0, 0, 1]];
+    }
+
+    // reflect matrix
+    function reflectionMatrix() {
+        return [[-1, 0, 0],
+                [0, 0, 1],
+                [0, 0, 1]];
+    }
+
+    // shear a matrix by lambda value
+    function shearMatrix(lambda) {
+        return [[1, lambda, 0],
+                [0, 1, 0],
+                [0, 0, 1]];
+    }
+
+    function rotateCube() {
+        rotate = rotateMatrix(angle);
+        pushMatrix(rotate); // rotate our cube
+        translate = translateMatrix(5, 5);
+        pushMatrix(translate); // we also want to move our cube so that it will go the other way when we negate angle
+        graphics.fillRect(0,0,15,15);
+        track += 1; // increment our tracker
+        if (track == 60) { // this should be when we complete one full circle
+          angle = -1*angle; // rotate in the other direction
+          track = 0; // reset tracker so we can keep looping + making a figure 8
+        }
+    }
+
+    // this starts us in the part of the canvas we want
+    function draw() {
+        translate1 = translateMatrix(200, 200);
+        pushMatrix(translate1);
+    }
+
+    function init() {
+        canvas = document.getElementById("theCanvas");
+        graphics = canvas.getContext("2d");
+
+        currMatrix = identityMatrix(); // gives us a matrix to work with
+        draw(); // draw something on the canvas
+        timer = setInterval(rotateCube, 100); // animate!
+    }
+
+</script>
+
+
+</head>
+<body onload="init()">
+    <canvas id="theCanvas" width="800" height="800"></canvas>
+</body>
+</html>
